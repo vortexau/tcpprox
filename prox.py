@@ -74,8 +74,12 @@ class Server(object) :
     def __init__(self, opt, q) :
         self.opt = opt
         sslCert = opt.cert + ".pem"
+        if opt.privateKey is not None:
+            privateKey = opt.privateKey + ".pem"
+        else:
+            privateKey = None
         ver = getSslVers(opt, opt.sslIn)
-        self.sock = tcpListen(opt.ip6, opt.bindAddr, opt.locPort, 0, ver, sslCert, None)
+        self.sock = tcpListen(opt.ip6, opt.bindAddr, opt.locPort, 0, ver, sslCert, privateKey)
         self.q = q
     def preWait(self, rr, r, w, e) :
         r.append(self.sock)
@@ -254,7 +258,13 @@ def getopts() :
     p.add_option("-m", dest="modules", action="append", default=[], help="filtering modules")
     p.add_option("-O", dest="originalDst", action="store_true", help="Use SO_ORIGINAL_DST for destination")
     p.add_option("-c", dest="clientCert", default=None, help="Client certificate to present to server")
+    p.add_option("-p", dest="privateKey", default=None, help="Private Key file for use with -C SSL certificate")
     opt,args = p.parse_args()
+
+    if opt.cert is not None:
+        opt.ssl = True
+        print("Cert was specified, enabling SSL")
+
     if opt.ssl :
         opt.sslIn = True
         opt.sslOut = True
